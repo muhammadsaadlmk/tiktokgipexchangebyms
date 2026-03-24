@@ -1,0 +1,19 @@
+packages:
+  "framer-motion": "For page transitions and list animations"
+  "lucide-react": "Icons for the interface"
+  "clsx": "Utility for constructing className strings conditionally"
+  "tailwind-merge": "Utility for merging tailwind classes safely"
+  "date-fns": "For formatting user join dates in the admin panel"
+  "react-hook-form": "For form state management"
+  "@hookform/resolvers": "For Zod schema validation with react-hook-form"
+  "zod": "For schema validation on the client side"
+  "sonner": "For toast notifications"
+
+images:
+  - path: "artifacts/tiktok-exchange/public/images/hero-bg.png"
+    description: "Dark, neon-lit abstract background with energetic hot pink and cyan gradients, reminiscent of TikTok's visual identity, 8k resolution, smooth blurs"
+    aspect_ratio: "16:9"
+
+notes:
+  - "The app relies on @workspace/api-client-react for TanStack Query hooks generated from OpenAPI."
+  - "Using wouter for routing, with authenticated routes wrapping the main app."
