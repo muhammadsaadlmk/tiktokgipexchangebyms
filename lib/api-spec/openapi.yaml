@@ -1,0 +1,749 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: TikTok Followers Exchange API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: users
+    description: User management
+  - name: follows
+    description: Follow operations
+  - name: admin
+    description: Admin operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "200":
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateMe
+      tags: [auth]
+      summary: Update own profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users (for following)
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserListItem"
+
+  /users/{userId}:
+    get:
+      operationId: getUserById
+      tags: [users]
+      summary: Get user profile
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserListItem"
+
+  /follows:
+    get:
+      operationId: getMyFollows
+      tags: [follows]
+      summary: Get who I follow and who follows me
+      responses:
+        "200":
+          description: Follow data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowData"
+
+  /follows/{targetUserId}:
+    post:
+      operationId: followUser
+      tags: [follows]
+      summary: Follow a user
+      parameters:
+        - name: targetUserId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Follow successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowResponse"
+        "400":
+          description: Cannot follow
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: unfollowUser
+      tags: [follows]
+      summary: Unfollow a user
+      parameters:
+        - name: targetUserId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Unfollow successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /admin/settings:
+    get:
+      operationId: adminGetSettings
+      tags: [admin]
+      summary: Admin - get platform settings
+      responses:
+        "200":
+          description: Current settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformSettings"
+    put:
+      operationId: adminUpdateSettings
+      tags: [admin]
+      summary: Admin - update platform settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlatformSettings"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformSettings"
+
+  /admin/settings/public:
+    get:
+      operationId: getPublicSettings
+      tags: [admin]
+      summary: Get public platform settings (active ad links etc)
+      responses:
+        "200":
+          description: Public settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformSettings"
+
+  /admin/settings/ad-click:
+    post:
+      operationId: recordAdClick
+      tags: [admin]
+      summary: Record a click on an ad link (public - no auth required)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdClickRequest"
+      responses:
+        "200":
+          description: Click recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /admin/users:
+    get:
+      operationId: adminListUsers
+      tags: [admin]
+      summary: Admin - list all users with details
+      responses:
+        "200":
+          description: Full user list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUserItem"
+    post:
+      operationId: adminCreateUser
+      tags: [admin]
+      summary: Admin - create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCreateUserRequest"
+      responses:
+        "200":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserItem"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/users/{userId}:
+    patch:
+      operationId: adminUpdateUser
+      tags: [admin]
+      summary: Admin - update user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUpdateUserRequest"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserItem"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: adminDeleteUser
+      tags: [admin]
+      summary: Admin - delete user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /admin/follows:
+    get:
+      operationId: adminListFollows
+      tags: [admin]
+      summary: Admin - list all follow relationships
+      responses:
+        "200":
+          description: All follows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminFollowItem"
+    post:
+      operationId: adminCreateFollow
+      tags: [admin]
+      summary: Admin - create a follow relationship
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminFollowRequest"
+      responses:
+        "200":
+          description: Follow created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/follows/{followId}:
+    delete:
+      operationId: adminDeleteFollow
+      tags: [admin]
+      summary: Admin - delete a follow relationship
+      parameters:
+        - name: followId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Follow deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        tiktokUsername:
+          type: string
+      required:
+        - email
+        - password
+        - tiktokUsername
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/UserProfile"
+        message:
+          type: string
+      required:
+        - user
+        - message
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        tiktokUsername:
+          type: string
+        points:
+          type: integer
+        isAdmin:
+          type: boolean
+        avatarUrl:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - email
+        - tiktokUsername
+        - points
+        - isAdmin
+        - createdAt
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        tiktokUsername:
+          type: string
+        avatarUrl:
+          type: string
+          nullable: true
+        newPassword:
+          type: string
+          minLength: 6
+        currentPassword:
+          type: string
+
+    UserListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        tiktokUsername:
+          type: string
+        points:
+          type: integer
+        avatarUrl:
+          type: string
+          nullable: true
+        isFollowedByMe:
+          type: boolean
+        followsMeBack:
+          type: boolean
+      required:
+        - id
+        - tiktokUsername
+        - points
+        - isFollowedByMe
+        - followsMeBack
+
+    FollowData:
+      type: object
+      properties:
+        following:
+          type: array
+          items:
+            $ref: "#/components/schemas/FollowEntry"
+        followers:
+          type: array
+          items:
+            $ref: "#/components/schemas/FollowEntry"
+      required:
+        - following
+        - followers
+
+    FollowEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        tiktokUsername:
+          type: string
+        points:
+          type: integer
+        avatarUrl:
+          type: string
+          nullable: true
+      required:
+        - id
+        - tiktokUsername
+        - points
+
+    FollowResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        myPoints:
+          type: integer
+      required:
+        - message
+        - myPoints
+
+    AdLink:
+      type: object
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+        label:
+          type: string
+        isActive:
+          type: boolean
+        clicks:
+          type: integer
+      required:
+        - id
+        - url
+        - isActive
+        - clicks
+
+    AdClickRequest:
+      type: object
+      properties:
+        adId:
+          type: string
+      required:
+        - adId
+
+    PlatformSettings:
+      type: object
+      properties:
+        adLinks:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdLink"
+
+    AdminUserItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        tiktokUsername:
+          type: string
+        points:
+          type: integer
+        isAdmin:
+          type: boolean
+        avatarUrl:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        followersCount:
+          type: integer
+        followingCount:
+          type: integer
+      required:
+        - id
+        - email
+        - tiktokUsername
+        - points
+        - isAdmin
+        - createdAt
+        - followersCount
+        - followingCount
+
+    AdminUpdateUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        tiktokUsername:
+          type: string
+        points:
+          type: integer
+        isAdmin:
+          type: boolean
+        avatarUrl:
+          type: string
+          nullable: true
+        password:
+          type: string
+          minLength: 6
+
+    AdminCreateUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        tiktokUsername:
+          type: string
+        points:
+          type: integer
+        isAdmin:
+          type: boolean
+      required:
+        - email
+        - password
+        - tiktokUsername
+
+    AdminFollowItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        followerId:
+          type: integer
+        followerUsername:
+          type: string
+        followingId:
+          type: integer
+        followingUsername:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - followerId
+        - followerUsername
+        - followingId
+        - followingUsername
+        - createdAt
+
+    AdminFollowRequest:
+      type: object
+      properties:
+        followerId:
+          type: integer
+        followingId:
+          type: integer
+      required:
+        - followerId
+        - followingId
